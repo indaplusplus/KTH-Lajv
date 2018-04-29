@@ -191,3 +191,19 @@ func watch(params []byte, db *sql.DB) (returns []byte, err error) {
 	returns, err = json.Marshal(watchData{vod, stream, hls})
 	return
 }
+
+type stopStreamData struct {
+	Id int `json:"id"`
+	Vod string `json:"vod"`
+}
+
+func stopStream(params []byte, db *sql.DB) (err error) {
+	var data stopStreamData
+	err = json.Unmarshal(params, &data)
+	if err != nil {
+		return
+	}
+	_, err = db.Exec("UPDATE streams SET vod = ?, stream = ?, hls = ? WHERE id = ?",
+		data.Vod, "", "", data.Id)
+	return
+}

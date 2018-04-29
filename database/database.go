@@ -19,6 +19,14 @@ func main() {
 	db.Close()
 }
 
+type id struct {
+	Id int  `json:"id"`
+}
+
+type ids struct {
+	Ids[] int `json:"ids"`
+}
+
 func tablesExist(db *sql.DB) (exists bool) {
 	res, err := db.Query("SELECT EXISTS (SELECT * FROM sqlite_master WHERE TYPE = 'table');")
 	if err != nil {
@@ -70,7 +78,7 @@ func createTables(db *sql.DB) {
 	}
 }
 
-type StreamData struct {
+type streamData struct {
 	Course string `json:"course"`
 	Room string `json:"room"`
 	Lecturer string `json:"lecturer"`
@@ -80,12 +88,8 @@ type StreamData struct {
 	Hls string `json:"hls"`
 }
 
-type Id struct {
-	Id int  `json:"id"`
-}
-
 func stream(params []byte, db *sql.DB) (returns []byte, err error) {
-	var data StreamData
+	var data streamData
 	err = json.Unmarshal(params, &data)
 	if err != nil {
 		return
@@ -98,16 +102,16 @@ func stream(params []byte, db *sql.DB) (returns []byte, err error) {
 	res.Next()
 	res.Scan(&count)
 	res.Close()
-	_, err = db.Exec("INSERT INTO streams VALUES(?, ?, ?, ?, ?, ?, CURRENT_DATE, NULL, ?, ?);",
-		count, data.Course, data.Room, data.Lecturer, data.Streamer, data.Name, data.Stream, data.Hls)
+	_, err = db.Exec("INSERT INTO streams VALUES(?, ?, ?, ?, ?, ?, CURRENT_DATE, ?, ?, ?);",
+		count, data.Course, data.Room, data.Lecturer, data.Streamer, data.Name, "", data.Stream, data.Hls)
 	if err != nil {
 		return
 	}
-	returns, err = json.Marshal(Id{count})
+	returns, err = json.Marshal(id{count})
 	return
 }
 
-type FindData struct {
+type findData struct {
 	Course string `json:"course"`
 	Room string `json:"room"`
 	Lecturer string `json:"lecturer"`
@@ -116,12 +120,8 @@ type FindData struct {
 	Date string `json:"date"`
 }
 
-type Ids struct {
-	Ids[] int `json:"ids"`
-}
-
 func find(params []byte, db *sql.DB) (returns []byte, err error) {
-	var data FindData
+	var data findData
 	err = json.Unmarshal(params, &data)
 	if err != nil {
 		return
@@ -156,7 +156,7 @@ func find(params []byte, db *sql.DB) (returns []byte, err error) {
 	if err != nil {
 		return
 	}
-	var ids Ids
+	var ids ids
 	for res.Next() {
 		fmt.Println("here")
 		var id int
@@ -165,5 +165,29 @@ func find(params []byte, db *sql.DB) (returns []byte, err error) {
 	}
 	res.Close()
 	returns, err = json.Marshal(ids)
+	return
+}
+
+type watchData struct {
+	Vod string `json:"vod"`
+	Stream string `json:"stream"`
+	Hls string `json:"hls"`
+}
+
+func watch(params []byte, db *sql.DB) (returns []byte, err error) {
+	var id id
+	err = json.Unmarshal(params, &id)
+	if err != nil {
+		return
+	}
+	res, err := db.Query("SELECT vod, stream, hls FROM streams WHERE id = ?", id.Id)
+	if err != nil {
+		return
+	}
+	var vod, stream, hls string
+	res.Next()
+	res.Scan(&vod, &stream, &hls)
+	res.Close()
+	returns, err = json.Marshal(watchData{vod, stream, hls})
 	return
 }

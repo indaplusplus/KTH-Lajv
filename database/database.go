@@ -5,7 +5,7 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 	"log"
 	"encoding/json"
-	"fmt"
+	"net/http"
 )
 
 func main() {
@@ -16,6 +16,8 @@ func main() {
 	if !tablesExist(db) {
 		createTables(db)
 	}
+	http.Handle("/", httpHandler{db})
+	log.Fatal(http.ListenAndServe(":219", nil))
 	db.Close()
 }
 
@@ -70,62 +72,91 @@ func createTables(db *sql.DB) {
 	}
 }
 
-type StreamData struct {
-	Course string `json:"course"`
-	Room string `json:"room"`
-	Lecturer string `json:"lecturer"`
-	Streamer string `json:"streamer"`
-	Name string `json:"name"`
-	Stream string `json:"stream"`
-	Hls string `json:"hls"`
+type httpHandler struct {
+	db *sql.DB
 }
 
-type Id struct {
-	Id int  `json:"id"`
-}
-
-func stream(params []byte, db *sql.DB) (returns []byte, err error) {
-	var data StreamData
-	err = json.Unmarshal(params, &data)
+func (handler httpHandler) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
+	body := make([]byte, request.ContentLength)
+	request.Body.Read(body)
+	var data jsonData
+	err := json.Unmarshal(body, &data)
 	if err != nil {
+		log.Print(err)
 		return
 	}
+	switch data.Command {
+	case "stream":
+		res, err := json.Marshal(stream(data, handler.db))
+		if err != nil {
+			log.Print(err)
+			return
+		}
+		writer.Write(res)
+	case "stop-stream":
+		stopStream(data, handler.db)
+	case "find":
+		res, err := json.Marshal(find(data, handler.db))
+		if err != nil {
+			log.Print(err)
+			return
+		}
+		writer.Write(res)
+	case "watch":
+		res, err := json.Marshal(watch(data, handler.db))
+		if err != nil {
+			log.Print(err)
+			return
+		}
+		writer.Write(res)
+	}
+}
+
+type jsonData struct {
+	Command  string `json:"command"`
+	Course   string `json:"course"`
+	Room     string `json:"room"`
+	Lecturer string `json:"lecturer"`
+	Streamer string `json:"streamer"`
+	Name     string `json:"name"`
+	Date     string `json:"date"`
+	Vod      string `json:"vod"`
+	Stream   string `json:"stream"`
+	Hls      string `json:"hls"`
+	Id       int    `json:"id"`
+	Ids      [] int `json:"ids"`
+}
+
+func stream(data jsonData, db *sql.DB) (returns jsonData) {
 	res, err := db.Query("SELECT COUNT(*) FROM streams;")
 	if err != nil {
+		log.Print(err)
 		return
 	}
 	var count int
 	res.Next()
 	res.Scan(&count)
 	res.Close()
-	_, err = db.Exec("INSERT INTO streams VALUES(?, ?, ?, ?, ?, ?, CURRENT_DATE, NULL, ?, ?);",
-		count, data.Course, data.Room, data.Lecturer, data.Streamer, data.Name, data.Stream, data.Hls)
+	_, err = db.Exec("INSERT INTO streams VALUES(?, ?, ?, ?, ?, ?, CURRENT_DATE, ?, ?, ?);",
+		count, data.Course, data.Room, data.Lecturer, data.Streamer, data.Name, "", data.Stream, data.Hls)
 	if err != nil {
+		log.Print(err)
 		return
 	}
-	returns, err = json.Marshal(Id{count})
+	returns.Id = count
 	return
 }
 
-type FindData struct {
-	Course string `json:"course"`
-	Room string `json:"room"`
-	Lecturer string `json:"lecturer"`
-	Streamer string `json:"streamer"`
-	Name string `json:"name"`
-	Date string `json:"date"`
-}
-
-type Ids struct {
-	Ids[] int `json:"ids"`
-}
-
-func find(params []byte, db *sql.DB) (returns []byte, err error) {
-	var data FindData
-	err = json.Unmarshal(params, &data)
+func stopStream(data jsonData, db *sql.DB) {
+	_, err := db.Exec("UPDATE streams SET vod = ?, stream = ?, hls = ? WHERE id = ?",
+		data.Vod, "", "", data.Id)
 	if err != nil {
-		return
+		log.Print(err)
 	}
+	return
+}
+
+func find(data jsonData, db *sql.DB) (returns jsonData) {
 	query := "SELECT id FROM streams WHERE "
 	var values []interface{}
 	if len(data.Course) > 0 {
@@ -152,18 +183,32 @@ func find(params []byte, db *sql.DB) (returns []byte, err error) {
 		query += "date = ? AND "
 		values = append(values, data.Date)
 	}
-	res, err := db.Query(query[:len(query)-5] + ";", values...)
+	res, err := db.Query(query[:len(query)-5]+";", values...)
 	if err != nil {
+		log.Print(err)
 		return
 	}
-	var ids Ids
 	for res.Next() {
-		fmt.Println("here")
 		var id int
 		res.Scan(&id)
-		ids.Ids = append(ids.Ids, id)
+		returns.Ids = append(returns.Ids, id)
 	}
 	res.Close()
-	returns, err = json.Marshal(ids)
+	return
+}
+
+func watch(data jsonData, db *sql.DB) (returns jsonData) {
+	res, err := db.Query("SELECT vod, stream, hls FROM streams WHERE id = ?", data.Id)
+	if err != nil {
+		log.Print(err)
+		return
+	}
+	var vod, stream, hls string
+	res.Next()
+	res.Scan(&vod, &stream, &hls)
+	res.Close()
+	returns.Vod = vod
+	returns.Stream = stream
+	returns.Hls = hls
 	return
 }

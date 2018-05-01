@@ -20,7 +20,7 @@ func post(w http.ResponseWriter, r *http.Request) { //takes user id, token, text
 
 	user := user{id: m["user"].(string), token: m["token"].(string)}
 	text := m["text"].(string)
-	response := m["text"].(int)
+	response := m["response"].(int)
 }
 
 func like(w http.ResponseWriter, r *http.Request) { //takes user id, token, post id

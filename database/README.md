@@ -12,3 +12,9 @@ Returns id.
 Returns ids.
 * watch - Gives links to a vod/stream, takes id.
 Returns vod, stream and hls.
+* chat - Creates a chat message, takes id, user and text.
+* comment - Creates a comment, takes id, user and text.
+* get-chat - Finds all chat messages of a stream, takes id.
+Returns chat.
+* get-comments - Finds all comments of a stream, takes id.
+Returns comments.

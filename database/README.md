@@ -18,3 +18,7 @@ Returns vod, stream and hls.
 Returns chat.
 * get-comments - Finds all comments of a stream, takes id.
 Returns comments.
+* login - Logs in a user, takes token.
+* loggedin - Finds if a user is logged in, takes token.
+Returns loggedin.
+* logout - Logs out a user, takes token.

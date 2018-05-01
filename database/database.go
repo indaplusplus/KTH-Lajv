@@ -127,6 +127,17 @@ func (handler httpHandler) ServeHTTP(writer http.ResponseWriter, request *http.R
 			return
 		}
 		writer.Write(res)
+	case "login":
+		login(data, handler.db)
+	case "loggedin":
+		res, err := json.Marshal(loggedIn(data, handler.db))
+		if err != nil {
+			log.Print(err)
+			return
+		}
+		writer.Write(res)
+	case "logout":
+		logout(data, handler.db)
 	}
 }
 
@@ -290,5 +301,31 @@ func getComments(data jsonData, db *sql.DB) (returns jsonData) {
 		returns.Comments = append(returns.Comments, messageData{user, time, text, upvotes})
 	}
 	res.Close()
+	return
+}
+
+func login(data jsonData, db *sql.DB) (returns jsonData) {
+	_, err := db.Exec("INSERT INTO Logins VALUES(?);", data.Token)
+	if err != nil {
+		log.Print(err)
+	}
+	return
+}
+
+func loggedIn(data jsonData, db *sql.DB) (returns jsonData) {
+	res, err := db.Query("SELECT * FROM Logins WHERE token = ?;", data.Token)
+	if err != nil {
+		log.Print(err)
+	}
+	returns.Loggedin = res.Next()
+	res.Close()
+	return
+}
+
+func logout(data jsonData, db *sql.DB) (returns jsonData) {
+	_, err := db.Exec("DELETE FROM Logins WHERE token = ?;", data.Token)
+	if err != nil {
+		log.Print(err)
+	}
 	return
 }

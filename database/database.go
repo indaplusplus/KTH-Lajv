@@ -109,26 +109,57 @@ func (handler httpHandler) ServeHTTP(writer http.ResponseWriter, request *http.R
 			return
 		}
 		writer.Write(res)
+	case "chat":
+		chat(data, handler.db)
+	case "comment":
+		comment(data, handler.db)
+	case "get-chat":
+		res, err := json.Marshal(getChat(data, handler.db))
+		if err != nil {
+			log.Print(err)
+			return
+		}
+		writer.Write(res)
+	case "get-comments":
+		res, err := json.Marshal(getComments(data, handler.db))
+		if err != nil {
+			log.Print(err)
+			return
+		}
+		writer.Write(res)
 	}
 }
 
 type jsonData struct {
-	Command  string `json:"command"`
-	Course   string `json:"course"`
-	Room     string `json:"room"`
-	Lecturer string `json:"lecturer"`
-	Streamer string `json:"streamer"`
-	Name     string `json:"name"`
-	Date     string `json:"date"`
-	Vod      string `json:"vod"`
-	Stream   string `json:"stream"`
-	Hls      string `json:"hls"`
-	Id       int    `json:"id"`
-	Ids      [] int `json:"ids"`
+	Command  string         `json:"command"`
+	Course   string         `json:"course"`
+	Room     string         `json:"room"`
+	Lecturer string         `json:"lecturer"`
+	Streamer string         `json:"streamer"`
+	Name     string         `json:"name"`
+	Date     string         `json:"date"`
+	Vod      string         `json:"vod"`
+	Stream   string         `json:"stream"`
+	Hls      string         `json:"hls"`
+	Id       int            `json:"id"`
+	Ids      [] int         `json:"ids"`
+	User     string         `json:"user"`
+	Text     string         `json:"text"`
+	Chat     [] messageData `json:"chat"`
+	Comments [] messageData `json:"comments"`
+	Token    string         `json:"token"`
+	Loggedin bool           `json:"loggedin"`
+}
+
+type messageData struct {
+	User    string `json:"user"`
+	Time    string `json:"time"`
+	Text    string `json:"text"`
+	Upvotes int    `json:"upvotes"`
 }
 
 func stream(data jsonData, db *sql.DB) (returns jsonData) {
-	res, err := db.Query("SELECT COUNT(*) FROM streams;")
+	res, err := db.Query("SELECT COUNT(*) FROM Streams;")
 	if err != nil {
 		log.Print(err)
 		return
@@ -137,7 +168,7 @@ func stream(data jsonData, db *sql.DB) (returns jsonData) {
 	res.Next()
 	res.Scan(&count)
 	res.Close()
-	_, err = db.Exec("INSERT INTO streams VALUES(?, ?, ?, ?, ?, ?, CURRENT_DATE, ?, ?, ?);",
+	_, err = db.Exec("INSERT INTO Streams VALUES(?, ?, ?, ?, ?, ?, CURRENT_DATE, ?, ?, ?);",
 		count, data.Course, data.Room, data.Lecturer, data.Streamer, data.Name, "", data.Stream, data.Hls)
 	if err != nil {
 		log.Print(err)
@@ -148,7 +179,7 @@ func stream(data jsonData, db *sql.DB) (returns jsonData) {
 }
 
 func stopStream(data jsonData, db *sql.DB) {
-	_, err := db.Exec("UPDATE streams SET vod = ?, stream = ?, hls = ? WHERE id = ?",
+	_, err := db.Exec("UPDATE Streams SET vod = ?, stream = ?, hls = ? WHERE id = ?",
 		data.Vod, "", "", data.Id)
 	if err != nil {
 		log.Print(err)
@@ -157,7 +188,7 @@ func stopStream(data jsonData, db *sql.DB) {
 }
 
 func find(data jsonData, db *sql.DB) (returns jsonData) {
-	query := "SELECT id FROM streams WHERE "
+	query := "SELECT id FROM Streams WHERE "
 	var values []interface{}
 	if len(data.Course) > 0 {
 		query += "course = ? AND "
@@ -210,5 +241,54 @@ func watch(data jsonData, db *sql.DB) (returns jsonData) {
 	returns.Vod = vod
 	returns.Stream = stream
 	returns.Hls = hls
+	return
+}
+
+func chat(data jsonData, db *sql.DB) (returns jsonData) {
+	_, err := db.Exec("INSERT INTO ChatMessages VALUES(?, ?, CURRENT_TIME, ?);",
+		data.Id, data.User, data.Text)
+	if err != nil {
+		log.Print(err)
+	}
+	return
+}
+
+func comment(data jsonData, db *sql.DB) (returns jsonData) {
+	_, err := db.Exec("INSERT INTO Comments VALUES(?, ?, CURRENT_TIMESTAMP, ?, 0);",
+		data.Id, data.User, data.Text)
+	if err != nil {
+		log.Print(err)
+	}
+	return
+}
+
+func getChat(data jsonData, db *sql.DB) (returns jsonData) {
+	res, err := db.Query("SELECT user, time, text FROM ChatMessages WHERE id = ?;",
+		data.Id)
+	if err != nil {
+		log.Print(err)
+	}
+	for res.Next() {
+		var user, time, text string
+		res.Scan(&user, &time, &text)
+		returns.Chat = append(returns.Chat, messageData{user, time, text, 0})
+	}
+	res.Close()
+	return
+}
+
+func getComments(data jsonData, db *sql.DB) (returns jsonData) {
+	res, err := db.Query("SELECT user, time, text, upvotes FROM Comments WHERE id = ?;",
+		data.Id)
+	if err != nil {
+		log.Print(err)
+	}
+	for res.Next() {
+		var user, time, text string
+		var upvotes int
+		res.Scan(&user, &time, &text, &upvotes)
+		returns.Comments = append(returns.Comments, messageData{user, time, text, upvotes})
+	}
+	res.Close()
 	return
 }

@@ -1,55 +1,40 @@
 package main
 
 import (
+	"bytes"
 	"encoding/json"
 	"net/http"
-	"time"
 )
 
-type comment struct {
-	id       int       `json:"id"`
-	user     string    `json:"user"`
-	time     time.Time `json:"time"`
-	text     string    `json:"text"`
-	upvotes  int       `json:"upvotes"`
-	response int       `json:"response"`
+var database string = "http://127.0.0.1:291"
+
+func post(w http.ResponseWriter, r *http.Request, data jsonData) {
+	jsonVal, err := json.Marshal(data)
+
+	if err == nil {
+
+	}
+
+	http.Post(database+"/comment", "application/json", bytes.NewBuffer(jsonVal))
 }
 
-func post(w http.ResponseWriter, r *http.Request) { //takes user id, token, text, response
-	m := getMap(r)
-
-	user := user{id: m["user"].(string), token: m["token"].(string)}
-	text := m["text"].(string)
-	response := m["response"].(int)
+func like(w http.ResponseWriter, r *http.Request, data jsonData) {
 }
 
-func like(w http.ResponseWriter, r *http.Request) { //takes user id, token, post id
-	m := getMap(r)
-
-	user := user{id: m["user"].(string), token: m["token"].(string)}
-	postid := m["postid"].(int)
+func delete(w http.ResponseWriter, r *http.Request, data jsonData) {
 }
 
-func delete(w http.ResponseWriter, r *http.Request) { //takes user id, token, post id
-	m := getMap(r)
+func get(w http.ResponseWriter, r *http.Request, data jsonData) {
+	jsonVal, err1 := json.Marshal(data)
 
-	user := user{id: m["user"].(string), token: m["token"].(string)}
-	postid := m["postid"].(int)
-}
+	if err1 == nil {
 
-func get(w http.ResponseWriter, r *http.Request) { //takes user id, token, video
-	m := getMap(r)
+	}
 
-	user := user{id: m["user"].(string), token: m["token"].(string)}
-	video := m["video"].(string)
+	resp, err2 := http.Post(database+"/get-comments", "application/json", bytes.NewBuffer(jsonVal))
 
-	//fetch comments associated with video
+	var dbData jsonData
+	json.NewDecoder(r.Body).Decode(&dbData)
 
-	//send comments associated with video
-}
-
-func getMap(r *http.Request) map[string]interface{} {
-	var msg interface{}
-	json.NewDecoder(r.Body).Decode(&msg)
-	return msg.(map[string]interface{})
+	//pass this back to the client
 }

@@ -42,7 +42,9 @@ func authenticate(v url.Values) (string, error) {
 	}
 	name := names[0]
 	token := tokens[0]
-	if name == "filip" && token == "token" {
+
+	// Better auth please
+	if token == "token" {
 		return name, nil
 	}
 	return "", errors.New("Incorrect auth details")

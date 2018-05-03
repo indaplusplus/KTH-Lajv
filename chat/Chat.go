@@ -32,16 +32,16 @@ func NewChat() Chat {
 }
 
 func authenticate(v url.Values) (string, error) {
-    names, ok := v["name"]
-    if !ok && len(names) < 1 {
-        return "", errors.New("No username provided")
-    }
-    tokens, ok := v["token"]
-    if !ok  && len(tokens) < 1 {
-        return "", errors.New("No token provided")
-    }
-    name := names[0]
-    token := tokens[0]
+	names, ok := v["name"]
+	if !ok && len(names) < 1 {
+		return "", errors.New("No username provided")
+	}
+	tokens, ok := v["token"]
+	if !ok && len(tokens) < 1 {
+		return "", errors.New("No token provided")
+	}
+	name := names[0]
+	token := tokens[0]
 	if name == "filip" && token == "token" {
 		return name, nil
 	}
@@ -49,10 +49,10 @@ func authenticate(v url.Values) (string, error) {
 }
 
 func getStreamId(v url.Values) (StreamID, error) {
-    strIDs, ok := v["sid"]
-    if !ok && len(strIDs) < 1 {
-        return 0, errors.New("No Stream ID provided")
-    }
+	strIDs, ok := v["sid"]
+	if !ok && len(strIDs) < 1 {
+		return 0, errors.New("No Stream ID provided")
+	}
 	sid, err := strconv.Atoi(strIDs[0])
 	if err != nil {
 		return 0, errors.New("Could not parse Stream ID")
@@ -70,22 +70,22 @@ func (c *Chat) getChannel(sid StreamID) *Channel {
 	// Possibly kept alive by the client connected to it so it could create
 	// a memmory leak too.
 	nchn := NewChannel()
-    nchn.run()
+	nchn.run()
 	c.channels[sid] = &nchn
 	return &nchn
 }
 
 func (c Chat) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-    q := r.URL.Query()
+	q := r.URL.Query()
 	uname, err := authenticate(q)
 	if err != nil {
 		log.Println("User auth failed")
-        log.Println("error:", err)
+		log.Println("error:", err)
 		return
 	}
 	sid, err := getStreamId(q)
 	if err != nil {
-        log.Println("error:", err)
+		log.Println("error:", err)
 		return
 	}
 
@@ -96,6 +96,6 @@ func (c Chat) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		log.Println(err)
 		return
 	}
-    log.Println("success: Connecting", uname, "to channel", sid)
+	log.Println("success: Connecting", uname, "to channel", sid)
 	chn.subscribe(uname, conn)
 }

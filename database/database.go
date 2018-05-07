@@ -53,6 +53,8 @@ func createTables(db *sql.DB) {
 		time TIMESTAMP,
 		text VARCHAR(500),
 		upvotes INTEGER,
+		replyToUser VARCHAR(50),
+		replyToTime TIMESTAMP,
 		FOREIGN KEY(id) REFERENCES Streams(id));`)
 	if err != nil {
 		log.Fatal(err)
@@ -127,6 +129,10 @@ func (handler httpHandler) ServeHTTP(writer http.ResponseWriter, request *http.R
 			return
 		}
 		writer.Write(res)
+	case "upvote-comment":
+		upvoteComment(data, handler.db)
+	case "delete-comment":
+		deleteComment(data, handler.db)
 	case "login":
 		login(data, handler.db)
 	case "loggedin":
@@ -142,31 +148,36 @@ func (handler httpHandler) ServeHTTP(writer http.ResponseWriter, request *http.R
 }
 
 type jsonData struct {
-	Command  string         `json:"command"`
-	Course   string         `json:"course"`
-	Room     string         `json:"room"`
-	Lecturer string         `json:"lecturer"`
-	Streamer string         `json:"streamer"`
-	Name     string         `json:"name"`
-	Date     string         `json:"date"`
-	Vod      string         `json:"vod"`
-	Stream   string         `json:"stream"`
-	Hls      string         `json:"hls"`
-	Id       int            `json:"id"`
-	Ids      [] int         `json:"ids"`
-	User     string         `json:"user"`
-	Text     string         `json:"text"`
-	Chat     [] messageData `json:"chat"`
-	Comments [] messageData `json:"comments"`
-	Token    string         `json:"token"`
-	Loggedin bool           `json:"loggedin"`
+	Command     string         `json:"command"`
+	Course      string         `json:"course"`
+	Room        string         `json:"room"`
+	Lecturer    string         `json:"lecturer"`
+	Streamer    string         `json:"streamer"`
+	Name        string         `json:"name"`
+	Date        string         `json:"date"`
+	Vod         string         `json:"vod"`
+	Stream      string         `json:"stream"`
+	Hls         string         `json:"hls"`
+	Id          int            `json:"id"`
+	Ids         [] int         `json:"ids"`
+	User        string         `json:"user"`
+	Time        string         `json:"time"`
+	Text        string         `json:"text"`
+	ReplyToUser string         `json:"replyToUser"`
+	ReplyToTime string         `json:"replyToTime"`
+	Chat        [] messageData `json:"chat"`
+	Comments    [] messageData `json:"comments"`
+	Token       string         `json:"token"`
+	Loggedin    bool           `json:"loggedin"`
 }
 
 type messageData struct {
-	User    string `json:"user"`
-	Time    string `json:"time"`
-	Text    string `json:"text"`
-	Upvotes int    `json:"upvotes"`
+	User        string `json:"user"`
+	Time        string `json:"time"`
+	Text        string `json:"text"`
+	Upvotes     int    `json:"upvotes"`
+	ReplyToUser string `json:"replyToUser"`
+	ReplyToTime string `json:"replyToTime"`
 }
 
 func stream(data jsonData, db *sql.DB) (returns jsonData) {
@@ -265,8 +276,8 @@ func chat(data jsonData, db *sql.DB) (returns jsonData) {
 }
 
 func comment(data jsonData, db *sql.DB) (returns jsonData) {
-	_, err := db.Exec("INSERT INTO Comments VALUES(?, ?, CURRENT_TIMESTAMP, ?, 0);",
-		data.Id, data.User, data.Text)
+	_, err := db.Exec("INSERT INTO Comments VALUES(?, ?, CURRENT_TIMESTAMP, ?, 0, ?, ?);",
+		data.Id, data.User, data.Text, data.ReplyToUser, data.ReplyToTime)
 	if err != nil {
 		log.Print(err)
 	}
@@ -282,25 +293,41 @@ func getChat(data jsonData, db *sql.DB) (returns jsonData) {
 	for res.Next() {
 		var user, time, text string
 		res.Scan(&user, &time, &text)
-		returns.Chat = append(returns.Chat, messageData{user, time, text, 0})
+		returns.Chat = append(returns.Chat, messageData{user, time, text, 0, "", ""})
 	}
 	res.Close()
 	return
 }
 
 func getComments(data jsonData, db *sql.DB) (returns jsonData) {
-	res, err := db.Query("SELECT user, time, text, upvotes FROM Comments WHERE id = ?;",
+	res, err := db.Query("SELECT user, time, text, upvotes, replyToUser, replyToTime FROM Comments WHERE id = ?;",
 		data.Id)
 	if err != nil {
 		log.Print(err)
 	}
 	for res.Next() {
-		var user, time, text string
+		var user, time, text, replyToUser, replyToTime string
 		var upvotes int
-		res.Scan(&user, &time, &text, &upvotes)
-		returns.Comments = append(returns.Comments, messageData{user, time, text, upvotes})
+		res.Scan(&user, &time, &text, &upvotes, &replyToUser, &replyToTime)
+		returns.Comments = append(returns.Comments, messageData{user, time, text, upvotes, replyToUser, replyToTime})
 	}
 	res.Close()
+	return
+}
+
+func upvoteComment(data jsonData, db *sql.DB) (returns jsonData) {
+	_, err := db.Exec("UPDATE Comments SET upvotes = upvotes + 1 WHERE user = ? AND time = ?;", data.User, data.Time)
+	if err != nil {
+		log.Print(err)
+	}
+	return
+}
+
+func deleteComment(data jsonData, db *sql.DB) (returns jsonData) {
+	_, err := db.Exec("DELETE FROM Comments WHERE user = ? AND time = ?;", data.User, data.Time)
+	if err != nil {
+		log.Print(err)
+	}
 	return
 }
 

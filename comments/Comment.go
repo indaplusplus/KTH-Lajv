@@ -9,6 +9,7 @@ import (
 var database string = "http://127.0.0.1:291"
 
 func post(w http.ResponseWriter, r *http.Request, data jsonData) {
+	data.Text = filter(data.Text)
 	jsonVal, err := json.Marshal(data)
 
 	if err == nil {
@@ -17,9 +18,19 @@ func post(w http.ResponseWriter, r *http.Request, data jsonData) {
 }
 
 func like(w http.ResponseWriter, r *http.Request, data jsonData) {
+	jsonVal, err := json.Marshal(data)
+
+	if err == nil {
+		http.Post(database+"/upvote-comment", "application/json", bytes.NewBuffer(jsonVal))
+	}
 }
 
 func delete(w http.ResponseWriter, r *http.Request, data jsonData) {
+	jsonVal, err := json.Marshal(data)
+
+	if err == nil {
+		http.Post(database+"/delete-comment", "application/json", bytes.NewBuffer(jsonVal))
+	}
 }
 
 func get(w http.ResponseWriter, r *http.Request, data jsonData) {

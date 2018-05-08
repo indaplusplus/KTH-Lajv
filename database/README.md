@@ -1,6 +1,6 @@
 # Database
 To start the database just compile database.go and run it.
-It listens on port 291.
+It listens on port 219.
 To query the database send a POST request to the server with a JSON-object in the request body.
 The server will respond with another JSON-object written in the body of the response.
 

@@ -1,6 +1,6 @@
 # Database
 To start the database just compile database.go and run it.
-It listens on port 219.
+It listens on port 55994.
 To query the database send a POST request to the server with a JSON-object in the request body.
 The server will respond with another JSON-object written in the body of the response.
 
@@ -20,7 +20,7 @@ Returns chat.
 Returns comments.
 * upvote-comment - Upvotes a comment, takes user and time.
 * delete-comment - Deletes a comment, takes user and time.
-* login - Logs in a user, takes token.
+* login - Logs in a user, takes token and user.
 * loggedin - Finds if a user is logged in, takes token.
-Returns loggedin.
+Returns user.
 * logout - Logs out a user, takes token.

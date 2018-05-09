@@ -17,7 +17,7 @@ func main() {
 		createTables(db)
 	}
 	http.Handle("/", httpHandler{db})
-	log.Fatal(http.ListenAndServe(":219", nil))
+	log.Fatal(http.ListenAndServe(":55994", nil))
 	db.Close()
 }
 

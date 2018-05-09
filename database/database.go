@@ -55,8 +55,8 @@ func createTables(db *sql.DB) {
 		upvotes INTEGER,
 		replyToUser VARCHAR(50),
 		replyToTime TIMESTAMP,
-		FOREIGN KEY(id) REFERENCES Streams(id)),
-		PRIMARY KEY(user, time);`)
+		PRIMARY KEY(user, time),
+		FOREIGN KEY(id) REFERENCES Streams(id));`)
 	if err != nil {
 		log.Fatal(err)
 	}

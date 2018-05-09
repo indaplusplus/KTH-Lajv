@@ -20,7 +20,7 @@ Returns chat.
 Returns comments.
 * upvote-comment - Upvotes a comment, takes user and time.
 * delete-comment - Deletes a comment, takes user and time.
-* login - Logs in a user, takes token.
+* login - Logs in a user, takes token and user.
 * loggedin - Finds if a user is logged in, takes token.
-Returns loggedin.
+Returns user.
 * logout - Logs out a user, takes token.

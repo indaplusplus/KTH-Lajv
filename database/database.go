@@ -55,7 +55,8 @@ func createTables(db *sql.DB) {
 		upvotes INTEGER,
 		replyToUser VARCHAR(50),
 		replyToTime TIMESTAMP,
-		FOREIGN KEY(id) REFERENCES Streams(id));`)
+		FOREIGN KEY(id) REFERENCES Streams(id)),
+		PRIMARY KEY(user, time);`)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -68,7 +69,7 @@ func createTables(db *sql.DB) {
 	if err != nil {
 		log.Fatal(err)
 	}
-	_, err = db.Exec("CREATE TABLE Logins (token VARCHAR(50));")
+	_, err = db.Exec("CREATE TABLE Logins (token VARCHAR(50), user VARCHAR(50));")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -168,7 +169,6 @@ type jsonData struct {
 	Chat        [] messageData `json:"chat"`
 	Comments    [] messageData `json:"comments"`
 	Token       string         `json:"token"`
-	Loggedin    bool           `json:"loggedin"`
 }
 
 type messageData struct {
@@ -332,7 +332,7 @@ func deleteComment(data jsonData, db *sql.DB) (returns jsonData) {
 }
 
 func login(data jsonData, db *sql.DB) (returns jsonData) {
-	_, err := db.Exec("INSERT INTO Logins VALUES(?);", data.Token)
+	_, err := db.Exec("INSERT INTO Logins VALUES(?, ?);", data.Token, data.User)
 	if err != nil {
 		log.Print(err)
 	}
@@ -340,12 +340,15 @@ func login(data jsonData, db *sql.DB) (returns jsonData) {
 }
 
 func loggedIn(data jsonData, db *sql.DB) (returns jsonData) {
-	res, err := db.Query("SELECT * FROM Logins WHERE token = ?;", data.Token)
+	res, err := db.Query("SELECT user FROM Logins WHERE token = ?;", data.Token)
 	if err != nil {
 		log.Print(err)
 	}
-	returns.Loggedin = res.Next()
+	var user string
+	res.Next()
+	res.Scan(&user)
 	res.Close()
+	returns.User = user
 	return
 }
 

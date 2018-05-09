@@ -6,7 +6,7 @@ import (
 	"net/http"
 )
 
-var database string = "http://127.0.0.1:291"
+var database string = "http://127.0.0.1:219"
 
 func post(w http.ResponseWriter, r *http.Request, data jsonData) {
 	data.Text = filter(data.Text)

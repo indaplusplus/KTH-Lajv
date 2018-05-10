@@ -6,9 +6,13 @@ import (
 	"net/http"
 )
 
-var database string = "http://127.0.0.1:55994"
+var database string = "http://localhost:55994"
 
 func post(w http.ResponseWriter, r *http.Request, data jsonData) {
+	if !loggedIn(data.Token) || data.User != getUsername(data.Token) {
+		return
+	}
+
 	data.Command = "comment"
 	data.Text = filter(data.Text)
 	jsonVal, err := json.Marshal(data)
@@ -21,6 +25,10 @@ func post(w http.ResponseWriter, r *http.Request, data jsonData) {
 }
 
 func like(w http.ResponseWriter, r *http.Request, data jsonData) {
+	if !loggedIn(data.Token) {
+		return
+	}
+
 	data.Command = "upvote-comment"
 	jsonVal, err := json.Marshal(data)
 
@@ -32,6 +40,10 @@ func like(w http.ResponseWriter, r *http.Request, data jsonData) {
 }
 
 func delete(w http.ResponseWriter, r *http.Request, data jsonData) {
+	if !loggedIn(data.Token) || data.User != getUsername(data.Token) {
+		return
+	}
+
 	data.Command = "delete-comment"
 	jsonVal, err := json.Marshal(data)
 

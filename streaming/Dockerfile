@@ -11,17 +11,29 @@ RUN dpkg -i --force-all ./debs/*.deb; exit 0
 RUN apt-get install -f -y
 # Expose RTMP
 EXPOSE 1935:1935
+# Auth works at 1337
+
+# Web
+EXPOSE 1339:1339
+# HLS
+#EXPOSE 8080:8080
+
+
 
 # Setup go auth server
 RUN apt-get install golang-go git -y
 RUN mkdir /stream-auth
 ADD stream-auth.go /stream-auth/
+ADD stream.go /stream-auth/
+ADD DatabaseConnector.go /stream-auth/
 
 ADD streaming.conf streaming.conf
 WORKDIR /stream-auth
 ENV GOPATH /go
 RUN go get github.com/gorilla/mux
-RUN go build -o auth .
+RUN go build -o auth stream-auth.go DatabaseConnector.go
+RUN go build -o web stream.go DatabaseConnector.go
+
 WORKDIR /
 
-CMD ["sh", "-c", "nginx -c /streaming.conf; (./stream-auth/auth &); bash"]
+CMD ["sh", "-c", "nginx -c /streaming.conf; (./stream-auth/auth &); ./stream-auth/web"]

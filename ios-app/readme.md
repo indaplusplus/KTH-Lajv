@@ -2,8 +2,8 @@
 
 Some screenshots:
 
-![Login](screenshots/s1)
+![Login](screenshots/s1.png)
 
-![Feed](screenshots/s2)
+![Feed](screenshots/s2.png)
 
-![New Stream](screenshots/s3)
+![New Stream](screenshots/s3.png)

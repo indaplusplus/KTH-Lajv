@@ -13,15 +13,11 @@ var LOGIN_COMPLETE_URL string = "http://localhost:8021/loginComplete"
 var LOGIN_API_KEY string = os.Getenv("LOGIN_API_KEY")
 
 type jsonData struct {
-	Token string `json:"token,omitempty"`
-	User  string `json:"user,omitempty"`
-}
-
-type verifyData struct {
+	Token   string `json:"token,omitempty"`
+	User    string `json:"user,omitempty"`
 	First   string `json:"first_name,omitempty"`
 	Last    string `json:"last_name,omitempty"`
 	Email   string `json:"emails,omitempty"`
-	User    string `json:"user,omitempty"`
 	Ugkthid string `json:"ugkthid,omitempty"`
 }
 
@@ -40,7 +36,7 @@ func loginComplete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var tmp verifyData
+	var tmp jsonData
 	json.NewDecoder(resp.Body).Decode(&tmp)
 	if tmp.User == "" {
 		w.WriteHeader(http.StatusUnauthorized)

@@ -1,6 +1,6 @@
 port 8021
 
-Requires api key to login for datasektionen to be stored in LOGIN\_API\_KEY
+Requires api key for login to datasektionen to be stored in env. variable LOGIN\_API\_KEY
 
 /login
 

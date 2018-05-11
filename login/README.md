@@ -1,21 +1,32 @@
-port 8021
-
 Requires api key for login to datasektionen to be stored in env. variable LOGIN\_API\_KEY
 
-/login
+Used by sending request to `{host}:8021/{endpoint}`
 
-redirects to login2.datasektionen.se for login, returns token
+Login is based on being redirected to a kth page.
 
-gives 401 if login failed
+## Endpoints
 
-/logout
+###### /login
 
-takes token
+Redirects to login2.datasektionen.se for login, returns token
 
-/isLoggedin
+Gives 401 if login failed
 
-Takes token, returns 200 if token is logged in, 401 if not
+###### /logout
 
-/getUser
+Takes token as json:
+`{"token": token}`
 
-takes token, returns username if logged in, 401 if not
+###### /isLoggedin
+
+Takes token as json:
+`{"token": token}`
+
+Returns 200 if token is logged in, 401 if not
+
+###### /getUser
+
+Takes token as json:
+`{"token": token}`
+
+if token is logged in, returns username as json: `{"user": kthid}`, returns 401 if not

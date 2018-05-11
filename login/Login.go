@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	_ "net/url"
+	// "net/url"
 	"os"
 	"regexp"
 )
@@ -12,15 +12,6 @@ import (
 var LOGIN_API_URL string = "https://login2.datasektionen.se"
 var LOGIN_COMPLETE_URL string = "http://localhost:8021/loginComplete"
 var LOGIN_API_KEY string = os.Getenv("LOGIN_API_KEY")
-
-type jsonData struct {
-	Token   string `json:"token,omitempty"`
-	User    string `json:"user,omitempty"`
-	First   string `json:"first_name,omitempty"`
-	Last    string `json:"last_name,omitempty"`
-	Email   string `json:"emails,omitempty"`
-	Ugkthid string `json:"ugkthid,omitempty"`
-}
 
 func login(w http.ResponseWriter, r *http.Request) {
 	url := LOGIN_API_URL + "/login?callback=" + LOGIN_COMPLETE_URL + "?token="

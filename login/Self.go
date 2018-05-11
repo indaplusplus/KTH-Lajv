@@ -6,6 +6,16 @@ import (
 	"net/http"
 )
 
+type jsonData struct {
+	Token   string `json:"token,omitempty"`
+	User    string `json:"user,omitempty"`
+	First   string `json:"first_name,omitempty"`
+	Last    string `json:"last_name,omitempty"`
+	Email   string `json:"emails,omitempty"`
+	Ugkthid string `json:"ugkthid,omitempty"`
+	Command string `json:"command,omitempty"`
+}
+
 func main() {
 	router := mux.NewRouter()
 	router.HandleFunc("/login", login).Methods("GET")

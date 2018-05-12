@@ -30,3 +30,7 @@ Takes token as json:
 `{"token": token}`
 
 if token is logged in, returns username as json: `{"user": kthid}`, returns 401 if not
+
+###### /getUser
+
+adds dummy users and tokens to database for testing

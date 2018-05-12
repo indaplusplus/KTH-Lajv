@@ -23,5 +23,6 @@ func main() {
 	router.HandleFunc("/logout", logout).Methods("POST")
 	router.HandleFunc("/isLoggedin", isLoggedin).Methods("POST")
 	router.HandleFunc("/getUser", getUser).Methods("POST")
+	router.HandleFunc("/addDummyData", addDummyData).Methods("GET")
 	log.Fatal(http.ListenAndServe(":8021", router))
 }

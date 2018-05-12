@@ -1,17 +1,16 @@
 package main
 
 import (
-	"encoding/json"
-	"net/http"
 	"bytes"
+	"encoding/json"
 	"fmt"
+	"net/http"
 )
 
-var DB string = "http://localhost:55994"
-// var db map[string]string = map[string]string{"4T0k3n": "filip", "token": "usr"}
+var DB string = "http://localhost:55994/"
 
 func loginToken(token string, user string) {
-	//db[token] = user
+	fmt.Printf("Adding (%s, %s) to db\n", token, user)
 	data, _ := json.Marshal(jsonData{Command: "login", Token: token, User: user})
 	_, err := http.Post(DB, "application/json", bytes.NewBuffer(data))
 	if err != nil {
@@ -21,7 +20,7 @@ func loginToken(token string, user string) {
 }
 
 func logoutToken(token string) {
-	// delete(db, token)
+	fmt.Println("removing token", token, "from db")
 	data, _ := json.Marshal(jsonData{Command: "logout", Token: token})
 	_, err := http.Post(DB, "application/json", bytes.NewBuffer(data))
 	if err != nil {
@@ -36,8 +35,8 @@ func containsToken(token string) bool {
 }
 
 func getLoggedInUser(token string) (string, bool) {
-	// user, has := db[token]
-	data, _ := json.Marshal(jsonData{Command: "logout", Token: token})
+	fmt.Println("retrieving token", token, "from db")
+	data, _ := json.Marshal(jsonData{Command: "loggedin", Token: token})
 	resp, err := http.Post(DB, "application/json", bytes.NewBuffer(data))
 	if err != nil {
 		fmt.Println(err)

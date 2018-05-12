@@ -64,6 +64,11 @@ func getUser(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func addDummyData(w http.ResponseWriter, r *http.Request) {
+	loginToken("4T0k3n", "filip")
+	loginToken("token", "usr")
+}
+
 func register(w http.ResponseWriter, r *http.Request) {
 	//TODO if needed
 }

@@ -1,18 +1,20 @@
 package main
 
 import (
-	"encoding/json"
 	"encoding/base64"
+	"encoding/json"
 	"fmt"
 	"github.com/gorilla/mux"
 	"log"
 	"net/http"
+	"os"
 	"strconv"
+	//"path/filepath"
 )
 
 type Key struct {
-        Id int `json:"id"`
-        Token string `json:"Token"`
+	Id    int    `json:"id"`
+	Token string `json:"token"`
 }
 
 func AuthStreamHandler(w http.ResponseWriter, r *http.Request) {
@@ -34,16 +36,30 @@ func AuthStreamHandler(w http.ResponseWriter, r *http.Request) {
 	//return_code := http.StatusUnauthorized
 	//return_msg := "Invalid stream key"
 
+	id_str := strconv.Itoa(key.Id)
 	//stop-stream works more like a update than a stop...
 	update_json := StreamData{
 		Command: "stop-stream",
 		Vod:     "",
-		Hls:     "http://live.edstrom.me:6060/hls/" + strconv.Itoa(key.Id) + ".m3u8",
+		Hls:     "http://live.edstrom.me:6060/hls/" + id_str + ".m3u8",
 		// Stream is only needed for the streamer, this should be fine.
 		Stream: "",
 		Id:     key.Id,
 	}
 	_ = SendStreamRequest("http://localhost:55994/", &update_json)
+
+	//the file on our local filesystem leaks the entire b64 json object
+	//(which includes the token!!)
+	//Providing a url to a symlink instead should do the trick (hopefully the file itself doesn't leak the b64).
+
+	//Remove the symlink if it already exists
+	os.Chdir(HlsLocation)
+	if _, err := os.Stat(id_str + ".m3u8"); !os.IsNotExist(err) {
+		os.Remove(id_str + ".m3u8")
+	}
+	real_loc := name + ".m3u8"
+	symlink_loc := id_str + ".m3u8"
+	os.Symlink(real_loc, symlink_loc)
 
 	return_code := http.StatusOK
 	return_msg := "OK"

@@ -1,9 +1,9 @@
 package main
 
 import (
+	"encoding/base64"
 	"encoding/json"
 	"github.com/gorilla/mux"
-	"encoding/base64"
 	"log"
 	"net/http"
 )
@@ -17,19 +17,19 @@ type CreateStreamStruct struct {
 }
 
 type CreateStreamResult struct {
-	Key     string    `json:"key"`
+	Key    string `json:"key"`
 	Stream string `json:"stream"`
 }
 
 type Key struct {
-	Id int `json:"id"`
-	Token string `json:"Token"`
+	Id    int    `json:"id"`
+	Token string `json:"token"`
 }
 
 // The key is pretty much a base64:ed JSON object containing both stream id and the users token.
-func MakeKey(streamId int, token string)(string) {
+func MakeKey(streamId int, token string) string {
 	key := Key{
-		Id: streamId,
+		Id:    streamId,
 		Token: token,
 	}
 	json_str, err := json.Marshal(key)
@@ -68,7 +68,7 @@ func CreateStream(w http.ResponseWriter, r *http.Request) {
 	// TODO
 	token := ""
 	res_data := CreateStreamResult{
-		Key:     MakeKey(ansData.Id, token),
+		Key:    MakeKey(ansData.Id, token),
 		Stream: "rtmp://live.edstrom.me/live",
 	}
 

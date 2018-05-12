@@ -35,5 +35,6 @@ RUN go build -o auth stream-auth.go DatabaseConnector.go
 RUN go build -o web stream.go DatabaseConnector.go
 
 WORKDIR /
-
+RUN mkdir /tmp/hls
+RUN chmod 755 /tmp/hls
 CMD ["sh", "-c", "nginx -c /streaming.conf; (./stream-auth/auth &); ./stream-auth/web"]

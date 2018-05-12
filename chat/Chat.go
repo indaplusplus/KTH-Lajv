@@ -32,22 +32,17 @@ func NewChat() Chat {
 }
 
 func authenticate(v url.Values) (string, error) {
-	names, ok := v["name"]
-	if !ok && len(names) < 1 {
-		return "", errors.New("No username provided")
-	}
 	tokens, ok := v["token"]
 	if !ok && len(tokens) < 1 {
 		return "", errors.New("No token provided")
 	}
-	name := names[0]
 	token := tokens[0]
 
 	// Better auth please
-	if token == "token" {
-		return name, nil
+	if !loggedIn(token) {
+		return "", errors.New("Incorrect token")
 	}
-	return "", errors.New("Incorrect auth details")
+	return getUsername(token), nil
 }
 
 func getStreamId(v url.Values) (StreamID, error) {

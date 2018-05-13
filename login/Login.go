@@ -80,7 +80,7 @@ func getTokenFromJson(r *http.Request) string {
 
 func getTokenFromURL(r *http.Request) string {
 	token, has := r.URL.Query()["token"]
-	if !has {
+	if !has || len(token) < 1 {
 		return ""
 	}
 	return token[0]

@@ -3,13 +3,15 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"log"
 	"net"
 	"net/http"
 	"os"
+	"strings"
 )
 
 var LOGIN_API_URL string = "https://login2.datasektionen.se"
-var LOGIN_COMPLETE_URL string = "http://" + getHostIP() + ":8021/loginComplete"
+var LOGIN_COMPLETE_URL string = "http://" + GetOutboundIP() + ":8021/loginComplete"
 var LOGIN_API_KEY string = os.Getenv("LOGIN_API_KEY")
 
 func login(w http.ResponseWriter, r *http.Request) {
@@ -86,13 +88,13 @@ func getTokenFromURL(r *http.Request) string {
 	return token[0]
 }
 
-func getHostIP() (ret string) {
-	host, _ := os.Hostname()
-	addrs, _ := net.LookupIP(host)
-	for _, addr := range addrs {
-		if ipv4 := addr.To4(); ipv4 != nil {
-			ret = fmt.Sprint(ipv4)
-		}
+func GetOutboundIP() string {
+	conn, err := net.Dial("udp", "8.8.8.8:80")
+	if err != nil {
+		log.Fatal(err)
 	}
-	return
+	defer conn.Close()
+	localAddr := conn.LocalAddr().String()
+	idx := strings.LastIndex(localAddr, ":")
+	return localAddr[0:idx]
 }

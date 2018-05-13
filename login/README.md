@@ -31,6 +31,6 @@ Takes token as json:
 
 if token is logged in, returns username as json: `{"user": kthid}`, returns 401 if not
 
-###### /getUser
+###### /addDummyData
 
 adds dummy users and tokens to database for testing

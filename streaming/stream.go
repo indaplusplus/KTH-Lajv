@@ -79,9 +79,41 @@ func CreateStream(w http.ResponseWriter, r *http.Request) {
 	w.Write(res)
 }
 
+func Watch(w http.ResponseWriter, r *http.Request) {
+	body := make([]byte, r.ContentLength)
+	r.Body.Read(body)
+
+	var data jsonData
+	err := json.Unmarshal(body, &data)
+	if err != nil {
+		panic(err)
+	}
+	data.Command = "watch"
+
+	res := SendJSONRequest("http://localhost:55994/", &data)
+	w.Write(res)
+}
+
+func Find(w http.ResponseWriter, r *http.Request) {
+	body := make([]byte, r.ContentLength)
+	r.Body.Read(body)
+
+	var data jsonData
+	err := json.Unmarshal(body, &data)
+	if err != nil {
+		panic(err)
+	}
+	data.Command = "find"
+
+	res := SendJSONRequest("http://localhost:55994/", &data)
+	w.Write(res)
+}
+
 func main() {
 	r := mux.NewRouter()
 	r.HandleFunc("/stream/create", CreateStream)
+	r.HandleFunc("/stream/find", Find)
+	r.HandleFunc("/stream/watch", Watch)
 
 	http.Handle("/", r)
 	server := &http.Server{

@@ -7,6 +7,38 @@ import (
 	"net/http"
 )
 
+type jsonData struct {
+	Command     string        `json:"command"`
+	Course      string        `json:"course"`
+	Room        string        `json:"room"`
+	Lecturer    string        `json:"lecturer"`
+	Streamer    string        `json:"streamer"`
+	Name        string        `json:"name"`
+	Date        string        `json:"date"`
+	Vod         string        `json:"vod"`
+	Stream      string        `json:"stream"`
+	Hls         string        `json:"hls"`
+	Id          int           `json:"id"`
+	Ids         []int         `json:"ids"`
+	User        string        `json:"user"`
+	Time        string        `json:"time"`
+	Text        string        `json:"text"`
+	ReplyToUser string        `json:"replyToUser"`
+	ReplyToTime string        `json:"replyToTime"`
+	Chat        []messageData `json:"chat"`
+	Comments    []messageData `json:"comments"`
+	Token       string        `json:"token"`
+}
+
+type messageData struct {
+	User        string `json:"user"`
+	Time        string `json:"time"`
+	Text        string `json:"text"`
+	Upvotes     int    `json:"upvotes"`
+	ReplyToUser string `json:"replyToUser"`
+	ReplyToTime string `json:"replyToTime"`
+}
+
 type StreamData struct {
 	Command  string `json:"command"`
 	Course   string `json:"course"`
@@ -50,8 +82,32 @@ func unpackJson(r *http.Request) *StreamData {
 	return &data
 }
 
-func SendStreamRequest(url string, jsonData *StreamData) []byte {
-	jsonString, err := json.Marshal(jsonData)
+func SendJSONRequest(url string, ptr_json *jsonData) []byte {
+	jsonString, err := json.Marshal(ptr_json)
+	if err != nil {
+		panic(err)
+	}
+	data := []byte(jsonString)
+	req, err := http.NewRequest("POST", url, bytes.NewBuffer(data))
+
+	req.Header.Set("Content-Type", "application/json")
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		panic(err)
+	}
+	defer resp.Body.Close()
+
+	body, err_read := ioutil.ReadAll(resp.Body)
+	if err_read != nil {
+		panic(err_read)
+	}
+	return body
+}
+
+func SendStreamRequest(url string, ptr_json *StreamData) []byte {
+	jsonString, err := json.Marshal(ptr_json)
 	if err != nil {
 		panic(err)
 	}

@@ -3,24 +3,16 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"log"
+	"net"
 	"net/http"
-	_ "net/url"
 	"os"
-	"regexp"
+	"strings"
 )
 
 var LOGIN_API_URL string = "https://login2.datasektionen.se"
-var LOGIN_COMPLETE_URL string = "http://localhost:8021/loginComplete"
+var LOGIN_COMPLETE_URL string = "http://" + GetOutboundIP() + ":8021/loginComplete"
 var LOGIN_API_KEY string = os.Getenv("LOGIN_API_KEY")
-
-type jsonData struct {
-	Token   string `json:"token,omitempty"`
-	User    string `json:"user,omitempty"`
-	First   string `json:"first_name,omitempty"`
-	Last    string `json:"last_name,omitempty"`
-	Email   string `json:"emails,omitempty"`
-	Ugkthid string `json:"ugkthid,omitempty"`
-}
 
 func login(w http.ResponseWriter, r *http.Request) {
 	url := LOGIN_API_URL + "/login?callback=" + LOGIN_COMPLETE_URL + "?token="
@@ -73,6 +65,11 @@ func getUser(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func addDummyData(w http.ResponseWriter, r *http.Request) {
+	loginToken("4T0k3n", "filip")
+	loginToken("token", "usr")
+}
+
 func register(w http.ResponseWriter, r *http.Request) {
 	//TODO if needed
 }
@@ -84,5 +81,20 @@ func getTokenFromJson(r *http.Request) string {
 }
 
 func getTokenFromURL(r *http.Request) string {
-	return string(regexp.MustCompile(`token=\w{22}`).Find([]byte(fmt.Sprint(r.URL))))[6:]
+	token, has := r.URL.Query()["token"]
+	if !has || len(token) < 1 {
+		return ""
+	}
+	return token[0]
+}
+
+func GetOutboundIP() string {
+	conn, err := net.Dial("udp", "8.8.8.8:80")
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer conn.Close()
+	localAddr := conn.LocalAddr().String()
+	idx := strings.LastIndex(localAddr, ":")
+	return localAddr[0:idx]
 }

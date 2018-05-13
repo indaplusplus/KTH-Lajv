@@ -3,14 +3,13 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"net"
 	"net/http"
-	// "net/url"
 	"os"
-	"regexp"
 )
 
 var LOGIN_API_URL string = "https://login2.datasektionen.se"
-var LOGIN_COMPLETE_URL string = "http://localhost:8021/loginComplete"
+var LOGIN_COMPLETE_URL string = "http://" + getHostIP() + ":8021/loginComplete"
 var LOGIN_API_KEY string = os.Getenv("LOGIN_API_KEY")
 
 func login(w http.ResponseWriter, r *http.Request) {
@@ -80,5 +79,20 @@ func getTokenFromJson(r *http.Request) string {
 }
 
 func getTokenFromURL(r *http.Request) string {
-	return string(regexp.MustCompile(`token=\w{22}`).Find([]byte(fmt.Sprint(r.URL))))[6:]
+	token, has := r.URL.Query()["token"]
+	if !has {
+		return ""
+	}
+	return token[0]
+}
+
+func getHostIP() (ret string) {
+	host, _ := os.Hostname()
+	addrs, _ := net.LookupIP(host)
+	for _, addr := range addrs {
+		if ipv4 := addr.To4(); ipv4 != nil {
+			ret = fmt.Sprint(ipv4)
+		}
+	}
+	return
 }

@@ -1,0 +1,52 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: streaming
+  labels:
+    app: streaming
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: streaming
+  template:
+    metadata:
+      labels:
+        app: streaming
+    spec:
+      terminationGracePeriodSeconds: 30
+      containers:
+        - image: gcr.io/inda-proj/streaming
+          name: streaming
+          imagePullPolicy: "Always"
+          ports:
+            - containerPort: 6060
+              name: hls
+            - containerPort: 1935
+              name: rtmp
+            - containerPort: 1339
+              name: stream-logic
+        - image: gcr.io/inda-proj/database
+          imagePullPolicy: "Always"
+          name: database
+          ports:
+            - containerPort: 55994
+              name: lovedb
+        - image: gcr.io/inda-proj/login
+          imagePullPolicy: "Always"
+          name: login
+          ports:
+            - containerPort: 8021
+              name: login
+        - image: gcr.io/inda-proj/comments
+          imagePullPolicy: "Always"
+          name: comments
+          ports:
+            - containerPort: 8080
+              name: comments
+        - image: gcr.io/inda-proj/chat
+          imagePullPolicy: "Always"
+          name: chat
+          ports:
+            - containerPort: 9876
+              name: chat

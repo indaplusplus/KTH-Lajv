@@ -3,11 +3,7 @@ package main
 import (
 	"bytes"
 	"encoding/json"
-	"errors"
-	"io/ioutil"
-	"log"
 	"net/http"
-	"net/url"
 )
 
 type user struct {
@@ -19,7 +15,7 @@ type user struct {
 	Ugkthid string `json:"ugkthid,omitempty"`
 }
 
-var loginServer string = "http://localhost:8021"
+var loginServer = "http://localhost:8021"
 
 func loggedIn(token string) bool {
 	u := user{Token: token}
@@ -57,7 +53,7 @@ func getUsername(token string) string {
 	return res.User
 }
 
-var database string = "http://localhost:55994"
+var database = "http://localhost:55994"
 
 type jsonData struct {
 	Command     string        `json:"command"`
@@ -92,13 +88,16 @@ type messageData struct {
 	ReplyToTime string `json:"replyToTime"`
 }
 
-func (a API) storeMessage(m Message, sid StreamID) error {
+func storeMessage(m Message, sid StreamID) error {
+	var data jsonData
 	data.Command = "chat"
-	data.Id = m.sid
-	data.Text = json.Marshal(m)
+	data.Id = int(sid)
+	msg, err := json.Marshal(m)
+	data.Text = string(msg)
 	jsonVal, err := json.Marshal(data)
 	if err != nil {
-		return
+		return err
 	}
 	http.Post(database, "application/json", bytes.NewBuffer(jsonVal))
+	return nil
 }

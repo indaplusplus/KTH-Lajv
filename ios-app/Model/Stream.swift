@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import SwiftyJSON
 
 class Stream {
     
@@ -31,6 +32,21 @@ class Stream {
         _vod = vod
         _stream = stream
         _hls = hls
+    }
+    
+    class func jsonToStream(json: JSON) -> [Stream] {
+        var streams = [Stream]()
+        for data in json.arrayValue {
+            let streamer = data["streamer"].stringValue
+            let name = data["name"].stringValue
+            let lecturer = data["lecturer"].stringValue
+            let course = data["course"].stringValue
+            let hls = data["hls"].stringValue
+            
+            let stream = Stream(id: 0, course: course, room: "", lecturer: lecturer, name: name, streamer: name, date: "", vod: "", stream: name, hls: hls)
+            streams.append(stream)
+        }
+        return streams
     }
     
     class func fakeData() -> [Stream] {

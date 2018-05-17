@@ -21,13 +21,11 @@ type StreamID int
 
 type Chat struct {
 	channels map[StreamID]*Channel
-	db       Database
 }
 
 func NewChat() Chat {
 	return Chat{
 		make(map[StreamID]*Channel),
-		Database{},
 	}
 }
 
